@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Meli loader",
   "main": "out/bundle.min.js",
-  "types": "out/index.d.ts",
+  "types": "out/meli.d.ts",
   "scripts": {
     "build": "rm -rf out/ && rollup --config",
     "prepublishOnly": "pnpm run build"
