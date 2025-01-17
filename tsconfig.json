@@ -4,14 +4,15 @@
     "rootDir": "src",
     "outDir": "out",
     "declaration": true,
+    "declarationDir": "out/types",
     "sourceMap": true,
     "strict": true,
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "importHelpers": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "typeRoots": ["node_modules/@types"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["**/*.types.ts"]
+  "include": ["src"]
 }
