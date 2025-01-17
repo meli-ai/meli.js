@@ -19,11 +19,11 @@
     "voice-ai"
   ],
   "author": "<founders@meli.com> (https://www.meli-ai.com/)",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/mmurakaru/meli.js/issues"
   },
-  "homepage": "https://github.com/mmurakaru/meli.js",
+  "homepage": "https://www.meli-ai.com/",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",

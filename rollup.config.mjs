@@ -17,7 +17,7 @@ export default {
   output: {
     file: "out/bundle.min.js",
     format: "es",
-    sourcemap: "inline",
+    sourcemap: false,
   },
   plugins,
 };
