@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mmurakaru/meli.js.git"
+    "url": "git+https://github.com/meli-ai/meli.js.git"
   },
   "keywords": [
     "meli",
@@ -21,7 +21,7 @@
   "author": "<founders@meli.com> (https://www.meli-ai.com/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mmurakaru/meli.js/issues"
+    "url": "https://github.com/meli-ai/meli.js/issues"
   },
   "homepage": "https://www.meli-ai.com/",
   "devDependencies": {
