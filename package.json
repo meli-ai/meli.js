@@ -3,6 +3,7 @@
   "version": "1.0.3",
   "description": "Meli loader",
   "main": "out/bundle.min.js",
+  "module": "out/bundle.min.js",
   "types": "out/types/meli.d.ts",
   "scripts": {
     "build": "rm -rf out/ && rollup --config",
@@ -18,7 +19,7 @@
     "product-tour",
     "voice-ai"
   ],
-  "author": "<founders@meli.com> (https://www.meli-ai.com/)",
+  "author": "Meli <founders@meli.com> (https://www.meli-ai.com/)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/meli-ai/meli.js/issues"

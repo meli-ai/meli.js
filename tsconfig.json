@@ -9,7 +9,7 @@
     "strict": true,
     "skipLibCheck": true,
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "importHelpers": true,
     "esModuleInterop": true,
     "typeRoots": ["node_modules/@types"]
