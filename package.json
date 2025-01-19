@@ -1,6 +1,6 @@
 {
   "name": "meli.js",
-  "version": "1.0.5-alpha",
+  "version": "1.0.6-alpha",
   "description": "Meli loader",
   "main": "out/bundle.min.js",
   "module": "out/bundle.min.js",
