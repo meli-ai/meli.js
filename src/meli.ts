@@ -1,13 +1,13 @@
 import type { ConditionalKeys } from "type-fest";
+import { detectBrowserTarget } from "./detect-browser-target";
 
 // `meli` lives on the `window` object
 interface WindowWithMeli extends Window {
-  meli?: Meli;
+  meli: Meli;
 
   // Array of `[method, deferred?, args]` tuples
   MELI_QUEUE?: [string, Deferred | null, any[]][];
 
-  MELI_ENV_VARS?: Record<string, any>;
   __meliStatePatched: Boolean;
 }
 
@@ -21,7 +21,7 @@ export interface Meli {
   auth: (userId: string, attributes?: Attributes) => Promise<void>;
   authAnonymous: (attributes?: Attributes) => Promise<void>;
   start: (tourId: string, opts?: StartOptions) => Promise<void>;
-  end: () => Promise<void>;
+  end: () => void;
 }
 
 // Helper types for meli.js API
@@ -106,8 +106,14 @@ if (!meli) {
         loadPromise = new Promise(function (resolve, reject) {
           var script = document.createElement("script");
           script.async = true;
-          script.type = "module";
-          script.src = `${urlPrefix}bundle.min.js`;
+
+          var browserTarget = detectBrowserTarget(navigator.userAgent);
+          if (browserTarget === "es2020") {
+            script.type = "module";
+            script.src = urlPrefix + "bundle.min.js";
+          } else {
+            script.src = urlPrefix + "bundle.min.js";
+          }
 
           script.onload = function () {
             resolve();
@@ -134,15 +140,15 @@ if (!meli) {
   /**
    * Helper to stub void-returning methods that should be queued
    */
-  // var stubVoid = function (
-  //   method: ConditionalKeys<Meli, (...args: any[]) => void>
-  // ) {
-  //   meli![method] = function () {
-  //     var args = Array.prototype.slice.call(arguments);
-  //     meli!.load();
-  //     q.push([method, null, args]);
-  //   } as any;
-  // };
+  var stubVoid = function (
+    method: ConditionalKeys<Meli, (...args: any[]) => void>
+  ) {
+    meli![method] = function () {
+      var args = Array.prototype.slice.call(arguments);
+      meli!.load();
+      q.push([method, null, args]);
+    } as any;
+  };
 
   // Helper to stub promise-returning methods that should be queued
   var stubPromise = function (
@@ -173,12 +179,11 @@ if (!meli) {
   //   };
 
   // Methods that return void and should be queued
-  //stubVoid("");
+  stubVoid("end");
 
   // Methods that return promises and should be queued
   stubPromise("init");
   stubPromise("start");
-  stubPromise("end");
   stubPromise("auth");
   stubPromise("authAnonymous");
 
