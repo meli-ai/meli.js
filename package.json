@@ -27,9 +27,6 @@
     "url": "https://github.com/meli-ai/meli.js/issues"
   },
   "homepage": "https://www.meli-ai.com/",
-  "publishConfig": {
-    "registry": "https://www.npmjs.com/package/meli.js"
-  },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
