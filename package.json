@@ -7,6 +7,8 @@
   "types": "out/types/meli.d.ts",
   "scripts": {
     "build": "rm -rf out/ && rollup --config",
+    "dev_publish": "yalc publish",
+    "dev_push": "pnpm run build && yalc push",
     "prepublishOnly": "pnpm run build"
   },
   "repository": {
@@ -34,7 +36,8 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "type-fest": "^4.32.0"
   },
   "packageManager": "pnpm@9.15.2"
 }

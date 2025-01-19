@@ -1,137 +1,190 @@
+import type { ConditionalKeys } from "type-fest";
+
 // `meli` lives on the `window` object
 interface WindowWithMeli extends Window {
   meli?: Meli;
+
+  // Array of `[method, deferred?, args]` tuples
+  MELI_QUEUE?: [string, Deferred | null, any[]][];
+
+  MELI_ENV_VARS?: Record<string, any>;
+  __meliStatePatched: Boolean;
 }
 
 // meli.js API
-interface Meli {
+export interface Meli {
   _stubbed: boolean;
+
   load: () => Promise<void>;
+
   init: (tourId: string) => Promise<void>;
-  start: () => Promise<void>;
+  auth: (userId: string, attributes?: Attributes) => Promise<void>;
+  authAnonymous: (attributes?: Attributes) => Promise<void>;
+  start: (tourId: string, opts?: StartOptions) => Promise<void>;
   end: () => Promise<void>;
-  auth: () => Promise<void>;
-  authAnonymous: () => Promise<void>;
-  processQueue: () => void;
-  [key: string]: any;
 }
 
-type MeliLoadState = "NOT_LOADED" | "LOADING" | "LOADED";
+// Helper types for meli.js API
+export interface Attributes {
+  [name: string]: AttributeLiteralOrList | AttributeChange;
+}
 
-// Window with meli defined
-const w: WindowWithMeli = typeof window === "undefined" ? ({} as any) : window;
-let meli: Meli | undefined = w.meli;
+type AttributeLiteral = string | number | boolean | null | undefined;
+type AttributeLiteralOrList = AttributeLiteral | AttributeLiteral[];
 
-console.log("Is Meli loaded:", meli);
+interface AttributeChange {
+  set?: AttributeLiteralOrList;
+  set_once?: AttributeLiteralOrList;
+  add?: string | number;
+  subtract?: string | number;
+  append?: AttributeLiteralOrList;
+  prepend?: AttributeLiteralOrList;
+  remove?: AttributeLiteralOrList;
+  data_type?: AttributeDataType;
+}
+
+type AttributeDataType = "string" | "boolean" | "number" | "datetime" | "list";
+
+export interface StartOptions {
+  once?: boolean;
+}
+
+interface Deferred {
+  resolve: () => void;
+  reject: (e: any) => void;
+}
+
+// If window.meli has not been initalized yet, then stub all its methods, so
+// it can be used immediately, and load the meli.js script from CDN.
+// Support importing meli.js with server-side rendering by attaching to an
+// empty object instead of `window`.
+var w: WindowWithMeli = typeof window === "undefined" ? ({} as any) : window;
+var meli = w.meli;
+var history = w.history;
+
+function overrideHistoryMethods(method: () => void, eventName: string) {
+  return function () {
+    var event = new CustomEvent(eventName);
+    var args = Array.prototype.slice.call(arguments);
+    var ret = method.apply(history, args as any);
+    w.dispatchEvent(event);
+    return ret;
+  };
+}
+
+// patch the history API's
+// pushState method to emit meli:pushstate and
+// replaceState method to emit meli:replacestate
+if (history) {
+  // indicates if the history API's pushState and replaceState are patched with custom event emitters
+  w.__meliStatePatched = true;
+
+  var originalPushState = history.pushState;
+  var originalReplaceState = history.replaceState;
+
+  history.pushState = overrideHistoryMethods(
+    originalPushState as any,
+    "meli:pushstate"
+  );
+  history.replaceState = overrideHistoryMethods(
+    originalReplaceState as any,
+    "meli:replacestate"
+  );
+}
 
 if (!meli) {
-  const MELI_QUEUE: Array<[string, string]> = [];
   const urlPrefix = "https://meli-tour.vercel.app/";
-  let loadState: MeliLoadState = "NOT_LOADED";
-  let queueProcessed = false;
 
+  // Initialize as an empty object (methods will be stubbed below)
+  var loadPromise: Promise<void> | null = null;
   meli = w.meli = {
     _stubbed: true,
-    load: function () {
-      return new Promise<void>((resolve, reject) => {
-        if (loadState === "LOADING" || loadState === "LOADED") {
-          return; // Avoid loading if already in progress or loaded
-        }
+    // Helper to inject the proper meli.js script/module into the document
+    load: function (): Promise<void> {
+      // Make sure we only load meli.js once
+      if (!loadPromise) {
+        loadPromise = new Promise(function (resolve, reject) {
+          var script = document.createElement("script");
+          script.async = true;
+          script.type = "module";
+          script.src = `${urlPrefix}bundle.min.js`;
 
-        loadState = "LOADING";
+          script.onload = function () {
+            resolve();
+          };
 
-        const script = document.createElement("script");
-        script.type = "module";
-        script.async = true;
-        script.src = `${urlPrefix}bundle.min.js`;
+          script.onerror = function () {
+            document.head.removeChild(script);
+            loadPromise = null;
+            var e = new Error("Could not load meli.js");
+            console.warn(e.message);
+            reject(e);
+          };
 
-        script.onload = function () {
-          console.log("Meli script loaded successfully");
-          loadState = "LOADED";
-          meli!._stubbed = false;
-          resolve();
-        };
-
-        script.onerror = function () {
-          loadState = "NOT_LOADED";
-          reject(new Error("Could not load meli.js"));
-        };
-
-        document.head.appendChild(script);
-      });
+          document.head.appendChild(script);
+        });
+      }
+      return loadPromise;
     },
   } as Meli;
 
-  if (typeof window !== "undefined" && meli._stubbed) {
-    console.log("Loading meli...");
-    meli
-      .load()
-      .then(() => meli!.processQueue())
-      .catch(console.error);
-  }
+  // Initialize the queue, which will be flushed by meli.js when it loads
+  var q = (w.MELI_QUEUE = w.MELI_QUEUE || []);
 
-  const stubMethod = function (name: string) {
-    let isCallingMethod = false;
+  /**
+   * Helper to stub void-returning methods that should be queued
+   */
+  // var stubVoid = function (
+  //   method: ConditionalKeys<Meli, (...args: any[]) => void>
+  // ) {
+  //   meli![method] = function () {
+  //     var args = Array.prototype.slice.call(arguments);
+  //     meli!.load();
+  //     q.push([method, null, args]);
+  //   } as any;
+  // };
 
-    if (meli) {
-      meli[name] = function (tourId: string) {
-        if (isCallingMethod) return Promise.resolve(); // Prevent recursive calls
-
-        console.log(`${name} called with argument:`, tourId);
-        isCallingMethod = true;
-
-        if (meli!._stubbed) {
-          MELI_QUEUE.push([name, tourId]);
-
-          if (loadState === "NOT_LOADED" && !queueProcessed) {
-            console.log("Loading Meli...");
-            meli!
-              .load()
-              .then(() => meli!.processQueue())
-              .catch(console.error);
-          }
-          isCallingMethod = false;
-          return Promise.resolve();
-        } else {
-          return meli![name](tourId).finally(() => {
-            isCallingMethod = false;
-          });
-        }
-      };
-    } else {
-      console.error("Meli is undefined while assigning method:", name);
-    }
+  // Helper to stub promise-returning methods that should be queued
+  var stubPromise = function (
+    method: ConditionalKeys<Meli, (...args: any[]) => Promise<void>>
+  ) {
+    meli![method] = function () {
+      var args = Array.prototype.slice.call(arguments);
+      meli!.load();
+      var deferred: Deferred;
+      var promise = new Promise<void>(function (resolve, reject) {
+        deferred = { resolve: resolve, reject: reject };
+      });
+      q.push([method, deferred!, args]);
+      return promise;
+    } as any;
   };
 
-  ["init", "start", "end", "auth", "authAnonymous"].forEach(stubMethod);
+  // Helper to stub methods that must return a value synchronously, and
+  // therefore must support using a default callback until meli.js is
+  // loaded.
+  //   var stubDefault = function (
+  //     method: ConditionalKeys<Meli, () => any>,
+  //     returnValue: any
+  //   ) {
+  //     meli![method] = function () {
+  //       return returnValue;
+  //     };
+  //   };
 
-  let isQueueProcessed = false;
+  // Methods that return void and should be queued
+  //stubVoid("");
 
-  meli.processQueue = function () {
-    if (queueProcessed || loadState !== "LOADED" || isQueueProcessed) {
-      console.log(
-        "Queue already processed or Meli not fully loaded or already processed."
-      );
-      return;
-    }
+  // Methods that return promises and should be queued
+  stubPromise("init");
+  stubPromise("start");
+  stubPromise("end");
+  stubPromise("auth");
+  stubPromise("authAnonymous");
 
-    console.log("Processing queue");
-    isQueueProcessed = true;
-    queueProcessed = true;
-    while (MELI_QUEUE.length > 0) {
-      const [method, tourId] = MELI_QUEUE.shift()!;
-      console.log(`Executing queued method: ${method} with tourId:`, tourId);
-      try {
-        if (meli) {
-          meli[method](tourId);
-        } else {
-          console.error("Meli is undefined while processing the queue.");
-        }
-      } catch (error) {
-        console.error(`Error processing queued method ${method}:`, error);
-      }
-    }
-  };
+  // Methods that synchronously return and can be stubbed with default return
+  // values and are not queued
+  // stubDefault("", null)
 }
 
-export default meli as Meli;
+export default meli!;
