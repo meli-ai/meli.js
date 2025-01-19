@@ -40,7 +40,7 @@ See the [meli.js API Reference](https://docs.meli-ai.com/api-reference/introduct
 
 ## Importing meli.js from multiple modules
 
-You can import `userflow` from multiple files in your app. It will always refer to the same instance. The meli.js script will only be loaded once.
+You can import `meli` from multiple files in your app. It will always refer to the same instance. The meli.js script will only be loaded once.
 
 ```js
 // App.js
@@ -60,7 +60,7 @@ meli.auth(user.id, {
 
 This package contains TypeScript definitions of the `meli` object.
 
-## Developing userflow.js
+## Developing meli.js
 
 Install dev dependencies:
 
