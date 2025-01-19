@@ -6,7 +6,7 @@ The full meli.js script lives on our CDN at:
 
 https://meli-tour.vercel.app/bundle.min.js
 
-This module exports the `meli` object, which supports all of neli.js' methods. The meli.js script is automatically injected into the current page when a method is called. Method calls are queued if meli.js is not loaded yet.
+This module exports the `meli` object, which supports all of meli.js' methods. The meli.js script is automatically injected into the current page when a method is called. Method calls are queued if meli.js is not loaded yet.
 
 ## Installation
 

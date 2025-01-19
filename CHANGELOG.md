@@ -8,10 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 -
 
-## [v1.0.6-alpha]
+## [v1.0.7-alpha]
 
 ### Added
 
+- Added ssr test.
 - Added stubbed implementations so methods can be used before meli.js is loaded from CDN.
 
-[v1.0.5]: https://github.com/meli-ai/meli.js/compare/v1.0.6...v.1.0.6-alpha
+[v1.0.7-alpha]: https://github.com/meli-ai/meli.js/compare/v.1.0.7-alpha...v.1.0.7-alpha
