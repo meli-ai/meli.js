@@ -16,7 +16,8 @@ export default {
   input: "src/meli.ts",
   output: {
     file: "out/bundle.min.js",
-    format: "es",
+    name: "meli.js",
+    format: "umd",
     sourcemap: false,
   },
   plugins,
