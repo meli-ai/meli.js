@@ -143,9 +143,9 @@ if (!meli) {
   var stubVoid = function (
     method: ConditionalKeys<Meli, (...args: any[]) => void>
   ) {
-    meli![method] = function () {
+    meli[method] = function () {
       var args = Array.prototype.slice.call(arguments);
-      meli!.load();
+      meli.load();
       q.push([method, null, args]);
     } as any;
   };
@@ -154,9 +154,9 @@ if (!meli) {
   var stubPromise = function (
     method: ConditionalKeys<Meli, (...args: any[]) => Promise<void>>
   ) {
-    meli![method] = function () {
+    meli[method] = function () {
       var args = Array.prototype.slice.call(arguments);
-      meli!.load();
+      meli.load();
       var deferred: Deferred;
       var promise = new Promise<void>(function (resolve, reject) {
         deferred = { resolve: resolve, reject: reject };
@@ -173,7 +173,7 @@ if (!meli) {
   //     method: ConditionalKeys<Meli, () => any>,
   //     returnValue: any
   //   ) {
-  //     meli![method] = function () {
+  //     meli[method] = function () {
   //       return returnValue;
   //     };
   //   };
