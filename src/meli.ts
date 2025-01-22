@@ -18,32 +18,17 @@ export interface Meli {
   load: () => Promise<void>;
 
   init: (tourId: string) => Promise<void>;
-  auth: (userId: string, attributes?: Attributes) => Promise<void>;
-  authAnonymous: (attributes?: Attributes) => Promise<void>;
+  auth: (userId: string, opts?: UserOptions) => Promise<void>;
+  authAnonymous: () => Promise<void>;
   start: (tourId: string, opts?: StartOptions) => Promise<void>;
   end: () => void;
 }
 
-// Helper types for meli.js API
-export interface Attributes {
-  [name: string]: AttributeLiteralOrList | AttributeChange;
+export interface UserOptions {
+  name: string;
+  email: string;
+  signed_up_at: string;
 }
-
-type AttributeLiteral = string | number | boolean | null | undefined;
-type AttributeLiteralOrList = AttributeLiteral | AttributeLiteral[];
-
-interface AttributeChange {
-  set?: AttributeLiteralOrList;
-  set_once?: AttributeLiteralOrList;
-  add?: string | number;
-  subtract?: string | number;
-  append?: AttributeLiteralOrList;
-  prepend?: AttributeLiteralOrList;
-  remove?: AttributeLiteralOrList;
-  data_type?: AttributeDataType;
-}
-
-type AttributeDataType = "string" | "boolean" | "number" | "datetime" | "list";
 
 export interface StartOptions {
   once?: boolean;
